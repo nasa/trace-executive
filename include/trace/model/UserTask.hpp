@@ -1,0 +1,48 @@
+/**
+ * Copyright 2016-2025 California Institute of Technology
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef TRACE_MODEL_USERTASK_HPP_
+#define TRACE_MODEL_USERTASK_HPP_
+
+#include <trace/model/Task.hpp>
+
+#include <condition_variable>
+#include <mutex>
+
+namespace trace {
+
+class UserTask : public Task {
+public:
+  UserTask(const std::string &uuid, const std::string &name);
+  UserTask(const UserTask &user_task);
+  virtual ~UserTask();
+
+  COPY_SUPPORT_FUNCTIONS(UserTask);
+
+  virtual void start();
+  virtual void cleanup();
+
+  virtual void publishUserNotification();
+  void waitForUserReply();
+
+protected:
+  std::mutex user_notification_mutex_;
+  std::condition_variable user_notification_received_;
+};
+
+} /* namespace trace */
+
+#endif /* TRACE_MODEL_USERTASK_HPP_ */
