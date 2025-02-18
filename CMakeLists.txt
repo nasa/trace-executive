@@ -23,8 +23,8 @@ set(
 )
 
 # Versioning
-set(ABI_VERSION 2)
-set(MINOR_VERSION 0.1)
+set(ABI_VERSION 1)
+set(MINOR_VERSION 0.0)
 message("ABI_VERSION = ${ABI_VERSION}")
 message("MINOR_VERSION = ${MINOR_VERSION}")
 
