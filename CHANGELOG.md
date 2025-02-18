@@ -7,4 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [1.0.0] - 2025-02-18
 
-[Unreleased]: https://github.jpl.nasa.gov/trace/executive/compare/v1.0.0...devel
+### Added
+- All source code from the internal respository corresponding to ROS2 support
+
+[Unreleased]: https://github.com/nasa/trace-executive/compare/v1.0.0...devel
