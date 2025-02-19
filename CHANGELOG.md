@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ## [Unreleased]
 
-## [1.0.0] - 2025-02-18
+### Added
+- Docker files to build and run a simple example BPMN mission with ROS2
+
+## 1.0.0 - 2025-02-18
 
 ### Added
 - All source code from the internal respository corresponding to ROS2 support
