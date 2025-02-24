@@ -1,38 +1,44 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 2.8)
+
 project(trace_executive)
 
-# Use C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
+set(ABI_VERSION 1)
+set(MINOR_VERSION 0.0)
 
-# Compiler flags
-add_compile_options(-Wall -Wextra -Wpedantic)
-
-# Set build type if not explicitly defined
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
+# Set build type
+set(CMAKE_BUILD_TYPE Release)
 
 # Set CMAKE_MODULE_PATH for custom CMake modules
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
 
+# Set compiler flags
 set(
   PROJECT_CXX_FLAGS
-  "-g -fno-omit-frame-pointer -Wall -Wextra -Werror -fPIC -std=c++14 -fdiagnostics-color=auto"
+  "-g -fno-omit-frame-pointer -Wall -Wextra -Werror -fPIC -std=c++11 -fdiagnostics-color=auto"
+  # CACHE STRING "Compiler flags for all project targets"
 )
 
-# Versioning
-set(ABI_VERSION 2)
-set(MINOR_VERSION 0.1)
 message("ABI_VERSION = ${ABI_VERSION}")
 message("MINOR_VERSION = ${MINOR_VERSION}")
 
-message(STATUS "Building within a ROS $ENV{ROS_VERSION} environment.")
+if("${CATKIN_DEVEL_PREFIX}" STREQUAL "" OR "$ENV{ROS_DISTRO}" STREQUAL "")
 
-# Find ROS 2 dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
+else()
+  message(STATUS "catkin build was not detected.")
+
+  find_package(catkin REQUIRED COMPONENTS
+    roscpp
+  )
+
+  catkin_package(
+    INCLUDE_DIRS include
+    LIBRARIES trace_connector_api trace_executive_api
+    CATKIN_DEPENDS roscpp
+    # DEPENDS ${Boost_LIBRARIES} dl pthread
+  )
+
+endif()
+
 
 # Find system dependencies
 
@@ -50,6 +56,12 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+# Doxygen
+# find_package(Doxygen)
+# set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/docs)
+# doxygen_add_docs(doxygen
+#   WORKINGDIR ${CMAKE_SOURCE_DIR}
+#   COMMENT "Generating API documentation with Doxygen")
 
 add_subdirectory(src)
 
@@ -101,32 +113,89 @@ if(DEFINED DOCTEST_CONFIG_DISABLE)
   add_subdirectory(test)
 endif()
 
-message(STATUS "ament build (ros-$ENV{ROS_DISTRO}) was detected.")
 
-# Mark executables and/or libraries for installation
-install(
-  TARGETS
-    trace_connector_api
+if("${CATKIN_DEVEL_PREFIX}" STREQUAL "" OR "$ENV{ROS_DISTRO}" STREQUAL "")
+  message(STATUS "catkin build was not detected.")
+
+  add_executable(trace
+    src/main.cpp
+  )
+
+  target_link_libraries(trace
     trace_executive_api
-  EXPORT trace_apis
-  ARCHIVE DESTINATION lib 
-  LIBRARY DESTINATION lib 
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+    ${Boost_LIBRARIES}
+    dl
+    pthread
+  )
 
-# Mark cpp header files for installation
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-  DESTINATION lib/${PROJECT_NAME}
-  FILES_MATCHING
-  PATTERN "*.hpp"
-  PATTERN "*.h"
-)
+  set_target_properties(
+    trace
+    PROPERTIES
+      COMPILE_FLAGS ${PROJECT_CXX_FLAGS}
+  )
 
-install(DIRECTORY include/
-  DESTINATION include
-)
+  # install
 
-ament_export_include_directories(include)
-ament_export_targets(trace_apis HAS_LIBRARY_TARGET)
+  # When RPM packages are built CMake is invoked with a -DLIB_INSTALL_DIR that we should respect.
+  set(
+    LIB_INSTALL_DIR lib64
+    CACHE STRING "Library install folder name (default: lib64)"
+  )
 
-ament_package()
+  install(TARGETS trace_connector_api DESTINATION ${LIB_INSTALL_DIR})
+  install(TARGETS trace_executive_api DESTINATION ${LIB_INSTALL_DIR})
+
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    FILES_MATCHING
+    PATTERN "*.hpp"
+  )
+
+  install(TARGETS trace DESTINATION bin)
+
+else()
+  message(STATUS "catkin build (ros-$ENV{ROS_DISTRO}) was detected.")
+
+  # include_directories(
+  #   ${catkin_INCLUDE_DIRS}
+  # )
+
+  # add_executable(trace_executive_node
+  #   src/RosNodeApplication.cpp
+  # )
+
+  # target_link_libraries(trace_executive_node
+  #   trace_executive_api
+  #   ${Boost_LIBRARIES}
+  #   ${catkin_LIBRARIES}
+  #   dl
+  #   pthread
+  # )
+
+  # set_target_properties(trace_executive_node
+  #   PROPERTIES
+  #     COMPILE_FLAGS ${PROJECT_CXX_FLAGS}
+  #     OUTPUT_NAME node
+  #     PREFIX ""
+  # )
+
+  # Mark executables and/or libraries for installation
+  install(
+    TARGETS
+      trace_connector_api
+      trace_executive_api
+      # trace_executive_node
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
+  # Mark cpp header files for installation
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+    FILES_MATCHING
+    PATTERN "*.hpp"
+    PATTERN "*.h"
+  )
+
+endif()
