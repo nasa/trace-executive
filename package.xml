@@ -5,7 +5,7 @@
   <description>The core software for the TRACE mission executive</description>
   <maintainer email="Jean-Pierre.de.la.Croix@jpl.nasa.gov">Jean-Pierre de la Croix</maintainer>
   <license>Apache 2.0</license>
-  <url type="website">https://github.jpl.nasa.gov/trace/executive</url>
+  <url type="website">https://github.com/nasa/trace-executive</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
